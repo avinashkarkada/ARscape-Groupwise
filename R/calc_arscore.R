@@ -114,14 +114,23 @@ calc_arscore <- function(norm_log,
       # Only score positive-direction taxa in this run
       score_norm_pos = ifelse(score_norm > 0, score_norm, NA_real_),
       
-      ARscore = ifelse(
-        is.na(score_norm_pos),
-        NA_real_,
-        limma::zscoreGamma(score_norm_pos, shape = shape_pred, rate = rate_pred)
-      ),
+      # Z-score Calculation (Only run zscoreGamma on valid rows)
+      ARscore = {
+        out <- rep(NA_real_, length(score_norm))
+        ok  <- is.finite(score_norm) & score_norm > 0 &
+          is.finite(shape_pred) & shape_pred > 0 &
+          is.finite(rate_pred)  & rate_pred  > 0
+        
+        out[ok] <- limma::zscoreGamma(
+          score_norm[ok],
+          shape = shape_pred[ok],
+          rate  = rate_pred[ok]
+        )
+        out
+      },
       
-      # If not scored (<=0), treat as not significant
-      p_val = ifelse(is.na(ARscore), 1, stats::pnorm(ARscore, lower.tail = FALSE)),
+      # P-values / nlog_p (treat unscored rows as p=1)
+      p_val  = ifelse(is.na(ARscore), 1, stats::pnorm(ARscore, lower.tail = FALSE)),
       nlog_p = -log10(p_val)
     )
 
