@@ -81,7 +81,7 @@ run_arscape <- function(fold_change,
       names_to = "sample_id",
       values_to = "fc"
     ) %>%
-    mutate(log2fc = log2(fc) %>% {if_else(. > 0, ., 0)}) %>% # Log2FC floored to 0.
+    mutate(log2fc = log2(fc)) %>% # Log2FC floor removed.
     select(-fc)
 
   # 3. Pre-calculate Group Metrics (Aggregation)
